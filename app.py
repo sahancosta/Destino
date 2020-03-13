@@ -1,6 +1,7 @@
 from flask import Flask, request, redirect, render_template
 from pymongo import MongoClient
 from bson import json_util
+import requests
 
 app = Flask(__name__)
 
@@ -10,9 +11,17 @@ collection = db.to_dos
 
 @app.route('/')
 def index():
-    return render_template("index.html")
+    recipe = "fried rice"
+    response = requests.get("http://www.recipepuppy.com/api/?q={recipe}")
+    response = response.json()["results"][0]
+    return render_template("index.html", recipe=response)
 
-
+@app.route('/search')
+def search():
+    recipe = request.args.get('a', 0, type=str)
+    response = requests.get("http://www.recipepuppy.com/api/?q={recipe}")
+    response = response.json()["results"][0]["title"]
+    return jsonify(result=response)
 @app.route('/view', methods=['GET'])
 def get_todos():
     to_dos = list(collection.find())
